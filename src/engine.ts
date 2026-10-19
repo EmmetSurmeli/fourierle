@@ -19,6 +19,8 @@ export type Game = {
   answer: string;
   guesses: string[];
   status: 'playing' | 'won' | 'lost';
+  difficulty: 'easy' | 'hard';
+  assisted: boolean;
 };
 export type Archive = { version: 1; days: Record<string, Game> };
 export const utcDay = (now = Date.now()) => Math.floor((now - EPOCH) / DAY);
@@ -38,11 +40,24 @@ export function schedule(ids: readonly string[] = pool) {
 export const order = schedule();
 export const dailyCountry = (day = utcDay()) =>
   order[((day % order.length) + order.length) % order.length];
-export const newGame = (day: number, answer = dailyCountry(day)): Game => ({
+export const newGame = (
+  day: number,
+  answer = dailyCountry(day),
+  difficulty: Game['difficulty'] = 'hard',
+): Game => ({
   day,
   answer,
   guesses: [],
   status: 'playing',
+  difficulty,
+  assisted: difficulty === 'easy',
+});
+export const visibleStage = (game: Game) =>
+  Math.min(game.guesses.length + (game.difficulty === 'easy' ? 2 : 0), 5);
+export const setDifficulty = (game: Game, difficulty: Game['difficulty']): Game => ({
+  ...game,
+  difficulty,
+  assisted: game.assisted || difficulty === 'easy',
 });
 export function guess(game: Game, id: string): Game {
   if (
@@ -77,7 +92,8 @@ export function loadArchive(raw: string | null): Archive {
         !g.guesses.every((x) => pool.includes(x))
       )
         continue;
-      let valid = newGame(day);
+      let valid = newGame(day, g.answer, g.difficulty === 'easy' ? 'easy' : 'hard');
+      if (g.assisted === true) valid.assisted = true;
       for (const id of g.guesses) valid = guess(valid, id);
       if (valid.guesses.length === g.guesses.length) safe.days[key] = valid;
     }
@@ -136,5 +152,5 @@ export function point(center: [number, number], terms: Term[], t: number): [numb
   return [x, y];
 }
 export function shareText(game: Game, origin: string) {
-  return `Fourierle #${game.day + 1} 🌍\n\n${Array.from({ length: 6 }, (_, i) => (i < game.guesses.length ? (game.guesses[i] === game.answer ? '🟩' : '⬜') : '⬛')).join(' ')}\n\n${game.status === 'won' ? `Solved in ${game.guesses.length}/6!` : 'See you tomorrow.  X/6'}\n\n${origin}`;
+  return `Fourierle #${game.day + 1} 🌍 · ${game.assisted ? 'Easy' : 'Hard'}\n\n${Array.from({ length: 6 }, (_, i) => (i < game.guesses.length ? (game.guesses[i] === game.answer ? '🟩' : '⬜') : '⬛')).join(' ')}\n\n${game.status === 'won' ? `Solved in ${game.guesses.length}/6!` : 'See you tomorrow.  X/6'}\n\n${origin}`;
 }

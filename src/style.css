@@ -171,6 +171,44 @@ main {
   color: var(--ink);
   box-shadow: 0 1px 4px #293c3310;
 }
+.difficulty-control {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin: -7px auto 17px;
+  color: var(--muted);
+}
+.difficulty-control > span {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+.difficulty-control small {
+  font-size: 10px;
+}
+.difficulty-switch {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.difficulty-switch button {
+  min-width: 49px;
+  padding: 5px 9px;
+  border-radius: 4px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.difficulty-switch button.selected {
+  background: var(--green);
+  color: white;
+}
+.difficulty-switch button:disabled {
+  cursor: default;
+}
 .puzzle {
   border: 1px solid var(--line);
   background: var(--paper);
@@ -325,6 +363,17 @@ main {
 .guess-heading > span {
   font-size: 10px;
   color: var(--muted);
+}
+.easy-clue {
+  width: max-content;
+  max-width: 100%;
+  margin: 0 0 12px;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--tint);
+  color: var(--ink);
+  font-size: 11px;
 }
 .guess-form {
   display: flex;

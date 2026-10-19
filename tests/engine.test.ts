@@ -13,6 +13,8 @@ import {
   point,
   matches,
   shareText,
+  setDifficulty,
+  visibleStage,
 } from '../src/engine';
 describe('versioned UTC schedule', () => {
   it('is deterministic and contains more than 100 unique countries', () => {
@@ -80,6 +82,24 @@ describe('game transitions and persistence', () => {
     expect(s).toContain('⬜ 🟩 ⬛');
     expect(s).not.toContain('Italy');
     expect(s).toContain('https://example.test');
+  });
+  it('keeps six guesses while easy mode advances the outline and labels assisted shares', () => {
+    const hard = newGame(0);
+    expect(visibleStage(hard)).toBe(0);
+    const easy = setDifficulty(hard, 'easy');
+    expect(visibleStage(easy)).toBe(2);
+    const threeMisses = order
+      .filter((id) => id !== hard.answer)
+      .slice(0, 3)
+      .reduce(guess, easy);
+    expect(visibleStage(threeMisses)).toBe(5);
+    expect(threeMisses.status).toBe('playing');
+    const backToHard = setDifficulty(threeMisses, 'hard');
+    expect(backToHard.assisted).toBe(true);
+    expect(shareText(backToHard, 'https://example.test')).toContain('Easy');
+    const restored = loadArchive(JSON.stringify({ version: 1, days: { 0: backToHard } }));
+    expect(restored.days[0].assisted).toBe(true);
+    expect(restored.days[0].difficulty).toBe('hard');
   });
 });
 describe('complex Fourier engine', () => {

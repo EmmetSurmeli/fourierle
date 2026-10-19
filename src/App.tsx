@@ -36,11 +36,20 @@ import {
   newGame,
   normalize,
   shareText,
+  setDifficulty,
   stats,
   utcDay,
+  visibleStage,
 } from './engine';
 const Lab = lazy(() => import('./Lab'));
 const KEY = `fourierle-${VERSION}`;
+function readDifficulty(): Game['difficulty'] {
+  try {
+    return localStorage.getItem('fourierle-difficulty') === 'easy' ? 'easy' : 'hard';
+  } catch {
+    return 'hard';
+  }
+}
 function read() {
   try {
     return loadArchive(localStorage.getItem(KEY));
@@ -65,7 +74,8 @@ function readPractice() {
       Array.isArray(s.game.guesses) &&
       s.game.guesses.length <= 6
     ) {
-      g = newGame(s.game.day, s.game.answer);
+      g = newGame(s.game.day, s.game.answer, s.game.difficulty === 'easy' ? 'easy' : 'hard');
+      if (s.game.assisted === true) g.assisted = true;
       for (const id of s.game.guesses) g = guess(g, id);
     }
     const scores = {
@@ -126,6 +136,7 @@ export default function App() {
   const day = utcDay(now);
   const [session] = useState(readPractice);
   const [mode, setMode] = useState<'daily' | 'practice'>('daily');
+  const [preferredDifficulty, setPreferredDifficulty] = useState(readDifficulty);
   const [practice, setPractice] = useState<Game | null>(session.game);
   const recent = useRef<string[]>(session.recent);
   const [practiceScores, setPracticeScores] = useState(session.scores);
@@ -167,9 +178,13 @@ export default function App() {
   const [exploreCount, setExploreCount] = useState(32);
   const [compare, setCompare] = useState(false);
   const [storageError, setStorageError] = useState(false);
-  const game = mode === 'daily' ? archive.days[day] || newGame(day) : practice || newGame(day);
+  const game =
+    mode === 'daily'
+      ? archive.days[day] || newGame(day, dailyCountry(day), preferredDifficulty)
+      : practice || newGame(day, dailyCountry(day), preferredDifficulty);
   const done = game.status !== 'playing';
   const stage = Math.min(game.guesses.length, 5);
+  const drawingStage = visibleStage(game);
   const dailyStats = stats(archive, day);
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
@@ -239,10 +254,33 @@ export default function App() {
     crypto.getRandomValues(a);
     const id = pool[a[0] % pool.length].id;
     recent.current = [...recent.current.slice(-19), id];
-    setPractice(newGame(day, id));
+    setPractice(newGame(day, id, preferredDifficulty));
     setMode('practice');
     setExplorer(false);
   };
+  function changeDifficulty(difficulty: Game['difficulty']) {
+    setPreferredDifficulty(difficulty);
+    try {
+      localStorage.setItem('fourierle-difficulty', difficulty);
+    } catch {}
+    if (done) return;
+    if (mode === 'daily') {
+      const currentArchive = read();
+      const current = currentArchive.days[day] || game;
+      const updated = {
+        ...currentArchive,
+        days: { ...currentArchive.days, [day]: setDifficulty(current, difficulty) },
+      };
+      setArchive(updated);
+      try {
+        localStorage.setItem(KEY, JSON.stringify(updated));
+      } catch {
+        setStorageError(true);
+      }
+    } else {
+      setPractice(setDifficulty(game, difficulty));
+    }
+  }
   function submit(id?: string) {
     if (utcDay() !== day) {
       setNow(Date.now());
@@ -364,6 +402,34 @@ export default function App() {
             <RotateCcw size={14} /> Practice
           </button>
         </div>
+        <div className="difficulty-control" role="group" aria-label="Difficulty">
+          <span>DIFFICULTY</span>
+          <div className="difficulty-switch">
+            <button
+              type="button"
+              className={game.difficulty === 'easy' ? 'selected' : ''}
+              aria-pressed={game.difficulty === 'easy'}
+              disabled={done}
+              onClick={() => changeDifficulty('easy')}
+            >
+              Easy
+            </button>
+            <button
+              type="button"
+              className={game.difficulty === 'hard' ? 'selected' : ''}
+              aria-pressed={game.difficulty === 'hard'}
+              disabled={done}
+              onClick={() => changeDifficulty('hard')}
+            >
+              Hard
+            </button>
+          </div>
+          <small>
+            {game.difficulty === 'easy'
+              ? 'More shape detail + a name clue'
+              : 'The original challenge'}
+          </small>
+        </div>
         <section className="puzzle" aria-label="Country puzzle">
           <div className="puzzle-top">
             <span>
@@ -390,11 +456,17 @@ export default function App() {
             {geometry ? (
               <FourierCanvas
                 geometry={geometry}
-                count={explorer ? exploreCount : done ? geometry.stages[5] : geometry.stages[stage]}
+                count={
+                  explorer
+                    ? exploreCount
+                    : done
+                      ? geometry.stages[5]
+                      : geometry.stages[drawingStage]
+                }
                 paused={paused}
                 circles={circles}
                 speed={speed}
-                exact={!explorer && (done || (stage === 5 && geometry.exactFallback))}
+                exact={!explorer && (done || (drawingStage === 5 && geometry.exactFallback))}
                 compare={compare && explorer}
                 dark={dark}
               />
@@ -412,11 +484,11 @@ export default function App() {
                     ? exploreCount
                     : done
                       ? geometry.stages[5]
-                      : geometry.stages[stage]
+                      : geometry.stages[drawingStage]
                   : '—'}
               </strong>{' '}
               rotating circles{' '}
-              {geometry && stage === 5 && geometry.exactFallback && !done && (
+              {geometry && drawingStage === 5 && geometry.exactFallback && !done && (
                 <small>· exact outline</small>
               )}
             </div>
@@ -457,6 +529,12 @@ export default function App() {
                   {6 - game.guesses.length} {game.guesses.length === 5 ? 'guess' : 'guesses'} left
                 </span>
               </div>
+              {game.difficulty === 'easy' && game.guesses.length >= 3 && geometry && (
+                <p className="easy-clue">
+                  Name clue: starts with <strong>{geometry.name.charAt(0)}</strong> ·{' '}
+                  <strong>{geometry.name.replace(/[^\p{L}]/gu, '').length}</strong> letters
+                </p>
+              )}
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -692,14 +770,19 @@ export default function App() {
       {modal === 'help' && (
         <Dialog title="One circle at a time." close={() => setModal(null)}>
           <p>A mystery country. Six guesses. An outline that gets clearer with every try.</p>
+          <p>
+            Choose <strong>Easy</strong> for a clearer starting shape and a name clue after three
+            misses. <strong>Hard</strong> keeps the original circle-by-circle challenge. You can
+            change difficulty while a puzzle is in progress; your shared result notes if Easy was
+            used.
+          </p>
           <ol className="instructions">
             <li>
               <strong>Look at the shape.</strong> Rotating circles draw a simplified country
               outline. North is always up.
             </li>
             <li>
-              <strong>Make your guess.</strong> Search for a country and submit it. There are no
-              distance or direction hints.
+              <strong>Make your guess.</strong> Search for a country and submit it.
             </li>
             <li>
               <strong>Watch the details emerge.</strong> Each wrong guess adds circles. The sixth
@@ -794,7 +877,10 @@ export default function App() {
                     <span>
                       #{g.day + 1} · {countries.find((c) => c.id === g.answer)?.name}
                     </span>
-                    <strong>{g.status === 'won' ? `${g.guesses.length}/6` : 'X/6'}</strong>
+                    <strong>
+                      {g.status === 'won' ? `${g.guesses.length}/6` : 'X/6'} ·{' '}
+                      {g.assisted ? 'Easy' : 'Hard'}
+                    </strong>
                   </div>
                 ))
             ) : (

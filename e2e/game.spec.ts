@@ -44,6 +44,28 @@ test('six wrong guesses, progressive circles, invalid and duplicate inputs', asy
   await expect(page.getByText(`The country was ${name}.`, { exact: true })).toBeVisible();
   await expect(page.getByRole('combobox')).toHaveCount(0);
 });
+test('easy mode shows a clearer outline and a clue, then survives refresh', async ({ page }) => {
+  const geometry = JSON.parse(readFileSync(`public/data/${answer}.json`, 'utf8'));
+  await page.getByRole('button', { name: 'Easy', exact: true }).click();
+  await expect(page.locator('.drawing-caption strong')).toHaveText(String(geometry.stages[2]));
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  const wrong = countries.filter((c: any) => c.id !== answer).slice(0, 3);
+  for (const c of wrong) await submit(page, c.name);
+  await expect(page.getByText(/Name clue: starts with/)).toContainText(name.charAt(0));
+  await expect(page.locator('.drawing-caption strong')).toHaveText(String(geometry.stages[5]));
+  await page.reload();
+  await expect(page.getByRole('button', { name: 'Easy', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await expect(page.getByText(/Name clue: starts with/)).toBeVisible();
+  await page.getByRole('button', { name: 'Hard', exact: true }).click();
+  await submit(page, name);
+  await page.getByRole('button', { name: 'Statistics', exact: true }).click();
+  await expect(page.getByRole('textbox', { name: 'Spoiler-free result to copy' })).toHaveValue(
+    /Easy/,
+  );
+});
 test('practice preserves daily progress and does not count in daily statistics', async ({
   page,
 }) => {
