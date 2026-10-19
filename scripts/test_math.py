@@ -61,6 +61,12 @@ def test_every_country_asset_matches_pinned_source_and_fourier_coefficients():
     ids=[country['id'] for country in index]
     assert len(ids)==189 and len(set(ids))==189
     assert ids==pool and set(ids)==assets==set(reports)
+    expected_continents={'Africa','Asia','Europe','North America','South America','Oceania'}
+    for country in index:
+        id=country['id']
+        expected='Africa' if id in {'MUS','SYC'} else features[id]['properties']['CONTINENT']
+        assert country['continent']==expected and expected in expected_continents,id
+        assert json.loads((ROOT/f'public/data/{id}.json').read_text())['stages'][1]==4,id
 
     for id in ids:
         geometry=json.loads((ROOT/f'public/data/{id}.json').read_text())

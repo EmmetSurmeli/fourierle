@@ -74,7 +74,9 @@ describe('game transitions and persistence', () => {
     expect(stats(loadArchive(JSON.stringify(a)), 4).played).toBe(3);
   });
   it('supports aliases and accent-insensitive search', () => {
-    expect(matches({ id: 'TUR', name: 'Türkiye', aliases: ['Turkey'] }, 'turk')).toBe(true);
+    expect(
+      matches({ id: 'TUR', name: 'Türkiye', aliases: ['Turkey'], continent: 'Asia' }, 'turk'),
+    ).toBe(true);
   });
   it('shares spoiler-free results using the deployed origin', () => {
     const g = guess(guess(newGame(0, 'ITA'), 'FRA'), 'ITA');
@@ -87,12 +89,17 @@ describe('game transitions and persistence', () => {
     const hard = newGame(0);
     expect(visibleStage(hard)).toBe(0);
     const easy = setDifficulty(hard, 'easy');
-    expect(visibleStage(easy)).toBe(2);
+    expect(visibleStage(easy)).toBe(1);
     const threeMisses = order
       .filter((id) => id !== hard.answer)
       .slice(0, 3)
       .reduce(guess, easy);
-    expect(visibleStage(threeMisses)).toBe(5);
+    expect(visibleStage(threeMisses)).toBe(4);
+    const fiveMisses = order
+      .filter((id) => id !== hard.answer)
+      .slice(3, 5)
+      .reduce(guess, threeMisses);
+    expect(visibleStage(fiveMisses)).toBe(5);
     expect(threeMisses.status).toBe('playing');
     const backToHard = setDifficulty(threeMisses, 'hard');
     expect(backToHard.assisted).toBe(true);

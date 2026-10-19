@@ -2,7 +2,7 @@ import pool from './pool.json' with { type: 'json' };
 export const EPOCH = Date.UTC(2026, 0, 1);
 export const DAY = 86400000;
 export const VERSION = 'v1';
-export type Country = { id: string; name: string; aliases: string[] };
+export type Country = { id: string; name: string; aliases: string[]; continent: string };
 export type Term = [number, number, number, number];
 export type Geometry = {
   id: string;
@@ -53,7 +53,7 @@ export const newGame = (
   assisted: difficulty === 'easy',
 });
 export const visibleStage = (game: Game) =>
-  Math.min(game.guesses.length + (game.difficulty === 'easy' ? 2 : 0), 5);
+  Math.min(game.guesses.length + (game.difficulty === 'easy' ? 1 : 0), 5);
 export const setDifficulty = (game: Game, difficulty: Game['difficulty']): Game => ({
   ...game,
   difficulty,

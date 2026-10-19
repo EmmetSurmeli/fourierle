@@ -426,7 +426,7 @@ export default function App() {
           </div>
           <small>
             {game.difficulty === 'easy'
-              ? 'More shape detail + a name clue'
+              ? '4 circles to start + continent and letter hints'
               : 'The original challenge'}
           </small>
         </div>
@@ -531,8 +531,14 @@ export default function App() {
               </div>
               {game.difficulty === 'easy' && game.guesses.length >= 3 && geometry && (
                 <p className="easy-clue">
-                  Name clue: starts with <strong>{geometry.name.charAt(0)}</strong> ·{' '}
-                  <strong>{geometry.name.replace(/[^\p{L}]/gu, '').length}</strong> letters
+                  Continent:{' '}
+                  <strong>{countries.find((c) => c.id === game.answer)?.continent}</strong>
+                  {game.guesses.length >= 5 && (
+                    <>
+                      {' '}
+                      · First letter: <strong>{geometry.name.charAt(0)}</strong>
+                    </>
+                  )}
                 </p>
               )}
               <form
@@ -777,10 +783,10 @@ export default function App() {
         <Dialog title="One circle at a time." close={() => setModal(null)}>
           <p>A mystery country. Six guesses. An outline that gets clearer with every try.</p>
           <p>
-            Choose <strong>Easy</strong> for a clearer starting shape and a name clue after three
-            misses. <strong>Hard</strong> keeps the original circle-by-circle challenge. You can
-            change difficulty while a puzzle is in progress; your shared result notes if Easy was
-            used.
+            Choose <strong>Easy</strong> to start with four circles. It reveals the continent on
+            guess 4 and the first letter on guess 6. <strong>Hard</strong> keeps the original
+            circle-by-circle challenge. You can change difficulty while a puzzle is in progress;
+            your shared result notes if Easy was used.
           </p>
           <ol className="instructions">
             <li>

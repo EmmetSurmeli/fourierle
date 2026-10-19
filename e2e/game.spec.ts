@@ -44,21 +44,32 @@ test('six wrong guesses, progressive circles, invalid and duplicate inputs', asy
   await expect(page.getByText(`The country was ${name}.`, { exact: true })).toBeVisible();
   await expect(page.getByRole('combobox')).toHaveCount(0);
 });
-test('easy mode shows a clearer outline and a clue, then survives refresh', async ({ page }) => {
+test('easy mode starts at four circles and reveals timed continent and letter hints', async ({
+  page,
+}) => {
   const geometry = JSON.parse(readFileSync(`public/data/${answer}.json`, 'utf8'));
+  const continent = countries.find((c: any) => c.id === answer).continent;
   await page.getByRole('button', { name: 'Easy', exact: true }).click();
-  await expect(page.locator('.drawing-caption strong')).toHaveText(String(geometry.stages[2]));
+  await expect(page.locator('.drawing-caption strong')).toHaveText(String(geometry.stages[1]));
+  await expect(page.locator('.easy-clue')).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  const wrong = countries.filter((c: any) => c.id !== answer).slice(0, 3);
-  for (const c of wrong) await submit(page, c.name);
-  await expect(page.getByText(/Name clue: starts with/)).toContainText(name.charAt(0));
+  const wrong = countries.filter((c: any) => c.id !== answer).slice(0, 5);
+  for (const c of wrong.slice(0, 2)) await submit(page, c.name);
+  await expect(page.locator('.easy-clue')).toHaveCount(0);
+  await submit(page, wrong[2].name);
+  await expect(page.locator('.easy-clue')).toContainText(`Continent: ${continent}`);
+  await expect(page.locator('.easy-clue')).not.toContainText('First letter:');
+  await expect(page.locator('.drawing-caption strong')).toHaveText(String(geometry.stages[4]));
+  for (const c of wrong.slice(3)) await submit(page, c.name);
+  await expect(page.locator('.easy-clue')).toContainText(`First letter: ${name.charAt(0)}`);
   await expect(page.locator('.drawing-caption strong')).toHaveText(String(geometry.stages[5]));
   await page.reload();
   await expect(page.getByRole('button', { name: 'Easy', exact: true })).toHaveAttribute(
     'aria-pressed',
     'true',
   );
-  await expect(page.getByText(/Name clue: starts with/)).toBeVisible();
+  await expect(page.locator('.easy-clue')).toContainText(`Continent: ${continent}`);
+  await expect(page.locator('.easy-clue')).toContainText(`First letter: ${name.charAt(0)}`);
   await page.getByRole('button', { name: 'Hard', exact: true }).click();
   await submit(page, name);
   await page.getByRole('button', { name: 'Statistics', exact: true }).click();
