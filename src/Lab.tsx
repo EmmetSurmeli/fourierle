@@ -38,7 +38,7 @@ export default function Lab() {
           ))}
         </select>
       </label>
-      <div className="lab-grid">
+      <div className="lab-grid" data-country={g?.id ?? ''}>
         {g?.stages.map((n, i) => (
           <article key={i}>
             <h3>

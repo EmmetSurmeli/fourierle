@@ -20,18 +20,19 @@ The visual design uses React 19, TypeScript, Vite, Canvas 2D, Lucide icons and l
 
 ## Commands
 
-| Command                                    | Purpose                                                      |
-| ------------------------------------------ | ------------------------------------------------------------ |
-| `npm run dev`                              | Local app and development-only calibration lab at `/?lab`    |
-| `npm test`                                 | Vitest engine, schedule and React interaction tests          |
-| `npm run test:e2e`                         | Playwright desktop Chrome, mobile Chrome and mobile WebKit   |
-| `npm run schedule`                         | Regenerate schedule manifest and validate 100 years          |
-| `npm run build`                            | Type-check and create deployable `dist/`                     |
-| `npm run preview`                          | Serve the production build locally                           |
-| `python3 scripts/download.py`              | Download pinned Natural Earth source                         |
-| `npm run data` / `npm run calibrate`       | Regenerate geometry, coefficients and all metrics            |
-| `.venv/bin/pytest scripts/test_math.py -q` | Mathematical and full-pool invariants                        |
-| `node scripts/visual-review.mjs`           | Capture 20 countries at all six stages (dev server required) |
+| Command                                    | Purpose                                                       |
+| ------------------------------------------ | ------------------------------------------------------------- |
+| `npm run dev`                              | Local app and development-only calibration lab at `/?lab`     |
+| `npm test`                                 | Vitest engine, schedule and React interaction tests           |
+| `npm run test:e2e`                         | Playwright desktop Chrome, mobile Chrome and mobile WebKit    |
+| `npm run test:all-countries`               | Render all six stages for every country and check every asset |
+| `npm run schedule`                         | Regenerate schedule manifest and validate 100 years           |
+| `npm run build`                            | Type-check and create deployable `dist/`                      |
+| `npm run preview`                          | Serve the production build locally                            |
+| `python3 scripts/download.py`              | Download pinned Natural Earth source                          |
+| `npm run data` / `npm run calibrate`       | Regenerate geometry, coefficients and all metrics             |
+| `.venv/bin/pytest scripts/test_math.py -q` | Mathematical and full-pool invariants                         |
+| `node scripts/visual-review.mjs`           | Capture 20 countries at all six stages (dev server required)  |
 
 For data regeneration:
 
@@ -68,7 +69,7 @@ Two metrics must not be confused:
 
 The report also contains aggregate RMS error, relative silhouette area error, aspect ratio error, retained polygon area, coefficient-strategy comparisons, and three similar coarse country signatures. Sampled L2 error decreases monotonically with nested orthogonal coefficient additions; area, Hausdorff distance and human recognizability need not.
 
-The early-shape heuristic compares orientation-preserving normalized extents and low-frequency amplitude signatures. It flags ambiguous puzzles for review, **not** proven difficulty. 56 current countries carry review flags. Visual review covers Italy, Chile, the US, UK, Japan, Indonesia, Fiji, New Zealand, Norway, Canada, Russia, France, Türkiye, Greece, Australia, Brazil, South Africa, India, Madagascar and the Netherlands. Genuine two-term outlines remain ambiguous, especially circular countries and island groups. Median solve targets and numerical difficulty ratings require real player testing; no invented difficulty score is shown.
+The early-shape heuristic compares orientation-preserving normalized extents and low-frequency amplitude signatures. It flags ambiguous puzzles for review, **not** proven difficulty. 53 current countries carry review flags. Visual review covers Italy, Chile, the US, UK, Japan, Indonesia, Fiji, New Zealand, Norway, Canada, Russia, France, Türkiye, Greece, Australia, Brazil, South Africa, India, Madagascar and the Netherlands. Genuine two-term outlines remain ambiguous, especially circular countries and island groups. Median solve targets and numerical difficulty ratings require real player testing; no invented difficulty score is shown.
 
 Open `/?lab` in development to inspect any country at all six levels with its metrics and neighbors. The route is disabled in production. Edit `scripts/overrides.json` to set geographical focus bounds or five custom increasing stage budgets, then regenerate and inspect. See [calibration notes](docs/calibration.md).
 
@@ -98,7 +99,7 @@ The share button uses Web Share where available, then clipboard; a selectable sp
 
 The playable pool contains 189 countries, including Taiwan and Palestine. Separately mapped Northern Cyprus and Somaliland are merged into Cyprus and Somalia for this game; boundaries are a cartographic reference, not a political assertion. Vatican City lacks a useful 50m outline. Kiribati, Micronesia, Marshall Islands, Palau, Tonga and Maldives are excluded because ocean-spanning geometry made their islands unreadably small at the common scale.
 
-Per-country focus rules use contiguous US, metropolitan France, mainland Norway, main-island New Zealand, European Netherlands and continental Portugal. Other polygons are sorted by projected area and retained until 99.5% coverage or 24 polygons, whichever comes first. Lakes and other interior holes are omitted; retained exterior coastlines are reconstructed. The coverage metric refers to the chosen focus region, not all sovereign territory. Extreme archipelagos may retain less than 99.5% because of the chain cap. This is a general-purpose 1:50m outline game, not a high-resolution or authoritative border map.
+Per-country focus rules use contiguous US, metropolitan France, mainland Norway, main-island New Zealand, European Netherlands and continental Portugal. Other polygons are sorted by projected area and retained until 99.5% coverage or 80 polygons, whichever comes first. Lakes and other interior holes are omitted; retained exterior coastlines are reconstructed. The coverage metric refers to the chosen focus region, not all sovereign territory. The current 189-country pool meets at least 99.5% retained exterior area for every country. This is a general-purpose 1:50m outline game, not a high-resolution or authoritative border map.
 
 ## Deployment
 

@@ -41,7 +41,7 @@ def prepare(feature, override):
     kept=[]; area=0
     for r in rings:
         kept.append(r); area+=abs(Polygon(r).area)
-        if area/total>=.995 or len(kept)>=24: break
+        if area/total>=.995 or len(kept)>=80: break
     points=np.concatenate(kept); lo=points.min(axis=0); hi=points.max(axis=0)
     center=(lo+hi)/2; scale=max(hi-lo)
     return [(r-center)/scale for r in kept],area/total

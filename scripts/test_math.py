@@ -1,6 +1,9 @@
+import hashlib
 import json
 import numpy as np
 from pathlib import Path
+from shapely.geometry import mapping, shape
+from shapely.ops import unary_union
 from process import coefficients, reconstruct, resample, prepare, ROOT
 
 def test_dft_and_negative_frequency():
@@ -37,3 +40,59 @@ def test_entire_dataset_nested_quality_and_final_fidelity():
 def test_selection_comparison_has_real_metrics():
     r=json.loads((ROOT/'public/data/calibration.json').read_text())
     assert all(x['comparison']['magnitude8']['rmse']<=x['comparison']['pairedLowFrequency8']['rmse']+1e-9 for x in r)
+
+def test_every_country_asset_matches_pinned_source_and_fourier_coefficients():
+    source_path=ROOT/'source/ne_50m_admin_0_countries.geojson'
+    source_bytes=source_path.read_bytes()
+    source=json.loads(source_bytes)
+    manifest=json.loads((ROOT/'source/manifest.json').read_text())
+    assert hashlib.sha256(source_bytes).hexdigest()==manifest['sha256']
+
+    features={f['properties']['ADM0_A3']:f for f in source['features']}
+    for target,part in [('CYP','CYN'),('SOM','SOL')]:
+        features[target]['geometry']=mapping(unary_union([
+            shape(features[target]['geometry']),shape(features[part]['geometry'])
+        ]))
+    overrides=json.loads((ROOT/'scripts/overrides.json').read_text())
+    index=json.loads((ROOT/'public/data/countries.json').read_text())
+    pool=json.loads((ROOT/'src/pool.json').read_text())
+    reports={r['id']:r for r in json.loads((ROOT/'public/data/calibration.json').read_text())}
+    assets={p.stem for p in (ROOT/'public/data').glob('???.json')}
+    ids=[country['id'] for country in index]
+    assert len(ids)==189 and len(set(ids))==189
+    assert ids==pool and set(ids)==assets==set(reports)
+
+    for id in ids:
+        geometry=json.loads((ROOT/f'public/data/{id}.json').read_text())
+        rings,coverage=prepare(features[id],overrides.get(id,{}))
+        assert geometry['id']==id
+        assert len(rings)==len(geometry['chains'])>0
+        assert abs(coverage-geometry['coverage'])<1e-10
+        assert coverage>=.995,id
+        sampled=[]
+        for chain,ring in zip(geometry['chains'],rings):
+            exact=np.asarray(chain['exact'])
+            assert exact.shape==ring.shape
+            assert np.max(np.abs(exact-ring))<=5.1e-7,id
+            assert np.max(np.abs(exact))<=.500001,id
+            z=resample(ring)
+            coeff,_=coefficients(z)
+            assert np.max(np.abs(np.array(chain['center'])-
+                                 np.array([coeff[0].real,coeff[0].imag])))<1e-12,id
+            sampled.append((z,coeff))
+        for polygon,frequency,re,im in geometry['terms']:
+            coefficient=sampled[polygon][1][frequency%512]
+            assert abs(coefficient.real-re)<5.1e-9,id
+            assert abs(coefficient.imag-im)<5.1e-9,id
+        for stage,budget in enumerate(geometry['stages']):
+            errors=[]
+            for polygon,(z,_) in enumerate(sampled):
+                terms=[t[1:] for t in geometry['terms'][:budget] if t[0]==polygon]
+                approx=reconstruct(geometry['chains'][polygon]['center'],terms)
+                errors.append(float(np.sqrt(np.mean(np.abs(z-approx)**2))))
+            reported=reports[id]['levels'][stage]
+            assert abs((1-max(errors))-reported['fidelity'])<1e-6,(id,stage)
+            assert abs(np.sqrt(np.mean(np.square(errors)))-reported['rmse'])<1e-6,(id,stage)
+        if geometry['exactFallback']:
+            # The sixth-stage display uses the serialized source rings directly.
+            assert all(len(chain['exact'])>=4 for chain in geometry['chains']),id
