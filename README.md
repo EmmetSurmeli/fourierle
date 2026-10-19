@@ -14,7 +14,7 @@ npm run dev
 # http://127.0.0.1:5173
 ```
 
-Daily and unlimited practice modes include keyboard country search and aliases, animated independent island chains, pause/circle/speed controls, dark appearance, reduced-motion support, browser-local progress, daily statistics and historical results, UTC countdown/reset, spoiler-free sharing, and a post-game coefficient explorer. All fonts and country geometry are served locally. Only the country index and the active country's geometry are fetched during normal play.
+Daily and unlimited practice modes include Easy and Hard difficulty, keyboard country search and aliases, animated independent island chains, pause/circle/speed controls, dark appearance, reduced-motion support, browser-local progress, daily statistics and historical results, UTC countdown/reset, spoiler-free sharing, and a post-game coefficient explorer. All fonts and country geometry are served locally. Only the country index and the active country's geometry are fetched during normal play.
 
 The visual design uses React 19, TypeScript, Vite, Canvas 2D, Lucide icons and locally bundled DM Sans/DM Serif Display. Plain CSS keeps this compact application simple; Tailwind was not needed. Python, NumPy and Shapely handle preprocessing. Runtime Python and GIS libraries are not required by the website.
 
@@ -105,11 +105,12 @@ Per-country focus rules use contiguous US, metropolitan France, mainland Norway,
 
 The build is completely static. No environment variables, secrets or backend are needed.
 
+- **Render (live):** [fourierle.onrender.com](https://fourierle.onrender.com) builds `main` after GitHub checks pass with `npm ci && npm run build` and publishes `dist`. Its response headers are configured in the Render Dashboard; `public/_headers` does not configure Render. Missing paths return a real 404 with Render's default body.
 - **Vercel:** import this GitHub repository; use `npm run build`, output `dist`. `vercel.json` supplies the settings and baseline response headers.
 - **Cloudflare Pages:** connect the repository, Node 24, build `npm run build`, output `dist`. `public/_headers` is copied into the build. Avoid stale caching of `/data`; JS/CSS/font assets are hashed.
 - **Sites:** `.openai/hosting.json` binds the private hosted preview and declares `dist` as static output. Sites source sync is separate from this repository's GitHub `origin`.
 
-No rewrite is necessary: the app uses one document and in-memory mode navigation. Serve over HTTPS for clipboard/Web Share support. The app itself requires no login; the private Sites preview has a hosting access gate. A public Vercel/Cloudflare deployment does not need that gate.
+No rewrite is necessary: the app uses one document and in-memory mode navigation. Serve over HTTPS for clipboard/Web Share support. The app itself requires no login; the private Sites preview has a hosting access gate. A public Vercel/Cloudflare deployment does not need that gate. The static build includes privacy, accessibility, credits, robots/sitemap, and portable 404/500 pages. See the [launch review](docs/launch-readiness.md) for legal and operational caveats.
 
 ## Validation and remaining limits
 

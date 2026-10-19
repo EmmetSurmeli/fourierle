@@ -79,6 +79,22 @@ svg {
   margin: auto;
   padding: 0 46px;
 }
+.fatal-error {
+  max-width: 600px;
+  margin: 15vh auto;
+  padding: 24px;
+  text-align: center;
+}
+.fatal-error h1 {
+  font:
+    normal 42px Georgia,
+    serif;
+  margin: 15px 0;
+}
+.fatal-error p:not(.eyebrow) {
+  line-height: 1.6;
+  margin-bottom: 22px;
+}
 .header {
   height: 95px;
   border-bottom: 1px solid var(--line);

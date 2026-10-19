@@ -13,6 +13,7 @@ jobs:
         with:
           python-version: '3.13'
       - run: npm ci
+      - run: npm audit --audit-level=high
       - run: pip install -r requirements.txt
       - run: pytest scripts/test_math.py -q
       - run: npm test

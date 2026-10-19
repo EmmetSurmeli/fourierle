@@ -764,6 +764,12 @@ export default function App() {
           <span>·</span>
           <button onClick={() => setModal('help')}>About the game</button>
           <span>·</span>
+          <a href="/privacy.html">Privacy</a>
+          <span>·</span>
+          <a href="/accessibility.html">Accessibility</a>
+          <span>·</span>
+          <a href="/credits.html">Credits</a>
+          <span>·</span>
           <span>Next puzzle {countdown(now)} · UTC</span>
         </div>
       </footer>
