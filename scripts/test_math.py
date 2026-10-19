@@ -29,7 +29,7 @@ def test_entire_dataset_nested_quality_and_final_fidelity():
         errors=[level['rmse'] for level in r['levels']]
         assert all(b<=a+1e-10 for a,b in zip(errors,errors[1:])),r['id']
         assert g['exactFallback'] or (r['levels'][-1]['fidelity']>=.999 and r['levels'][-1]['sourceHausdorff']<=.001)
-        assert g['stages'][:5]==[2,4,8,16,32]
+        assert len(g['stages'])==6 and all(a<b for a,b in zip(g['stages'],g['stages'][1:]))
         assert len({(t[0],t[1])for t in g['terms']})==len(g['terms'])
         assert all(t[1]!=0 for t in g['terms'])
         assert all(len(c['exact'])>=4 for c in g['chains'])

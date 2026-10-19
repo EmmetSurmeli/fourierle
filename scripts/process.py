@@ -66,6 +66,10 @@ def main():
     excluded={'VAT','CYN','SOL','KIR','FSM','MHL','PLW','TON','MDV'} # Natural Earth 50m has no useful Vatican boundary.
     names={'CHN':'China','CIV':'Côte d’Ivoire','CPV':'Cabo Verde','TLS':'Timor-Leste','USA':'United States','TUR':'Türkiye','CZE':'Czechia','COD':'Democratic Republic of the Congo','COG':'Republic of the Congo','PSX':'Palestine'}
     aliases={'USA':['USA','US','United States of America','America'],'GBR':['UK','Britain','Great Britain'],'TUR':['Turkey'],'CZE':['Czech Republic'],'COD':['DR Congo','DRC','Congo Kinshasa'],'COG':['Congo','Congo Brazzaville'],'CIV':['Ivory Coast'],'SWZ':['Swaziland'],'TLS':['East Timor'],'KOR':['South Korea'],'PRK':['North Korea'],'MMR':['Burma'],'MKD':['Macedonia'],'CPV':['Cape Verde']}
+    eligible=sorted(f['properties']['ADM0_A3'] for f in features if (f['properties']['TYPE']=='Sovereign country' or f['properties']['ADM0_A3'] in extra) and f['properties']['ADM0_A3'] not in excluded)
+    frozen=ROOT/'src/pool.json'
+    if frozen.exists() and json.loads(frozen.read_text())!=eligible:
+        raise RuntimeError('Published v1 pool is frozen. Introduce a dated v2 schedule before changing eligibility; do not overwrite historical puzzles.')
     index=[]; reports=[]; signatures=[]
     out=ROOT/'public/data'; out.mkdir(exist_ok=True)
     for f in sorted(features,key=lambda f:f['properties']['ADM0_A3']):
@@ -91,10 +95,12 @@ def main():
                 selected.remove(candidate); selected.insert(1,candidate)
         low=sorted(all_terms,key=lambda t:(abs(t[1]),t[0],t[1]))
         budgets=overrides.get(id,{}).get('stages',[2,4,8,16,32])
+        if len(budgets)!=5 or any(not isinstance(b,int) or b<1 or b>128 for b in budgets) or any(a>=b for a,b in zip(budgets,budgets[1:])):
+            raise ValueError(f'{id}: stages must be five strictly increasing integer budgets from 1 to 128')
         def evaluate(terms):
             ms=[metric(z,reconstruct(chains[j]['center'],[t[1:] for t in terms if t[0]==j])) for j,z in enumerate(zs)]
             return {'rmse':math.sqrt(sum(m['rmse']**2 for m in ms)/len(ms)), 'fidelity':1-max(m['rmse'] for m in ms), 'hausdorff':max(m['hausdorff'] for m in ms),'areaError':max(m['areaError'] for m in ms),'aspectError':max(m['aspectError'] for m in ms)}
-        final=64
+        final=max(64,2**math.ceil(math.log2(budgets[-1]+1)))
         while final<256 and evaluate(selected[:final])['fidelity']<.999: final*=2
         budgets=budgets+[final]
         levels=[evaluate(selected[:b]) for b in budgets]

@@ -11,7 +11,8 @@
     "test:e2e": "playwright test",
     "data": ".venv/bin/python scripts/process.py",
     "calibrate": ".venv/bin/python scripts/process.py",
-    "schedule": "node --import tsx scripts/schedule.ts"
+    "schedule": "node --import tsx scripts/schedule.ts",
+    "format": "prettier --write src/*.{ts,tsx,css} tests/*.{ts,tsx} scripts/schedule.ts e2e/*.ts *.ts README.md docs/*.md"
   },
   "dependencies": {
     "@fontsource/dm-sans": "^5.3.0",
@@ -29,6 +30,7 @@
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^6.1.2",
     "jsdom": "^26.0.0",
+    "prettier": "^3.9.10",
     "tsx": "^4.19.0",
     "typescript": "~5.7.2",
     "vite": "^8.3.4",
