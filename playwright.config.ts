@@ -1,10 +1,12 @@
 import { defineConfig, devices } from '@playwright/test';
+const production = process.env.E2E_PRODUCTION === '1';
+const url = `http://127.0.0.1:${production ? 5174 : 5173}`;
 export default defineConfig({
   testDir: 'e2e',
   timeout: 30000,
   fullyParallel: true,
   use: {
-    baseURL: 'http://127.0.0.1:5173',
+    baseURL: url,
     launchOptions: process.env.CHROME_PATH
       ? { executablePath: process.env.CHROME_PATH }
       : process.platform === 'darwin'
@@ -18,8 +20,8 @@ export default defineConfig({
     { name: 'webkit-mobile', use: { ...devices['iPhone 13'], launchOptions: {} } },
   ],
   webServer: {
-    command: 'npm run dev -- --port 5173',
-    url: 'http://127.0.0.1:5173',
+    command: production ? 'npm run preview -- --port 5174' : 'npm run dev -- --port 5173',
+    url,
     reuseExistingServer: true,
   },
 });

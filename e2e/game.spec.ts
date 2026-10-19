@@ -88,3 +88,18 @@ test('small screens, tablet and reduced motion remain usable', async ({ page }) 
   await page.reload();
   await expect(page.getByRole('button', { name: 'Resume animation' })).toBeVisible();
 });
+test('practice session survives refresh without touching the daily record', async ({ page }) => {
+  await page.getByRole('button', { name: 'Practice', exact: true }).click();
+  await expect(page.getByText('NO LIMITS')).toBeVisible();
+  const initial = await page.evaluate(
+    () => JSON.parse(sessionStorage.getItem('fourierle-practice')!).game.answer,
+  );
+  const wrong = countries.find((c: any) => c.id !== initial).name;
+  await submit(page, wrong);
+  await expect(page.locator('.drawing-caption strong')).toHaveText('4');
+  await page.reload();
+  await expect(page.getByRole('combobox')).toBeEnabled();
+  await page.getByRole('button', { name: 'Practice', exact: true }).click();
+  await expect(page.locator('.drawing-caption strong')).toHaveText('4');
+  expect(await page.evaluate(() => localStorage.getItem('fourierle-v1'))).toBeNull();
+});

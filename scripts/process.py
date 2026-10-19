@@ -108,7 +108,7 @@ def main():
         fallback=levels[-1]['fidelity']<.999 or source_distance>.001
         levels[-1]['sourceHausdorff']=source_distance
         name=names.get(id,p['NAME_EN'])
-        index.append({'id':id,'name':name,'aliases':list(set(aliases.get(id,[])+[p['NAME_LONG'],p['ADMIN']]))})
+        index.append({'id':id,'name':name,'aliases':sorted(set(aliases.get(id,[])+[p['NAME_LONG'],p['ADMIN']]))})
         data={'id':id,'name':name,'chains':chains,'terms':[[t[0],t[1],round(t[2],8),round(t[3],8)] for t in selected[:final]],'stages':budgets,'exactFallback':fallback,'note':overrides.get(id,{}).get('note',''),'coverage':coverage}
         (out/f'{id}.json').write_text(json.dumps(data,separators=(',',':')))
         reports.append({'id':id,'name':name,'polygons':len(chains),'retainedArea':coverage,'stages':budgets,'levels':levels,'exactFallback':fallback,'comparison':{'pairedLowFrequency8':evaluate(low[:8]),'magnitude8':evaluate(magnitude[:8])}})

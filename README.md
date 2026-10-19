@@ -41,7 +41,7 @@ python3 -m venv .venv
 npm run data
 ```
 
-For browser tests on Linux, run `npx playwright install --with-deps chromium webkit`. On macOS the default configuration uses installed Google Chrome plus Playwright WebKit; run `npx playwright install webkit`, or set `CHROME_PATH` to another Chromium executable. The suite starts a local dev server if one is not running. GitHub Actions executes the complete test/build workflow on every push and pull request.
+For browser tests on Linux, run `npx playwright install --with-deps chromium webkit`. On macOS the default configuration uses installed Google Chrome plus Playwright WebKit; run `npx playwright install webkit`, or set `CHROME_PATH` to another Chromium executable. The suite starts a local dev server if one is not running. To verify the production bundle, run `npm run build` then `E2E_PRODUCTION=1 npm run test:e2e`. GitHub Actions executes the complete test/build workflow on every push and pull request.
 
 ## Genuine Fourier reconstruction
 
