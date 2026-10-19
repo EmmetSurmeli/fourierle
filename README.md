@@ -105,7 +105,7 @@ Per-country focus rules use contiguous US, metropolitan France, mainland Norway,
 
 The build is completely static. No environment variables, secrets or backend are needed.
 
-- **Render (live):** [fourierle.onrender.com](https://fourierle.onrender.com) builds `main` after GitHub checks pass with `npm ci && npm run build` and publishes `dist`. Its response headers are configured in the Render Dashboard; `public/_headers` does not configure Render. Missing paths return a real 404 with Render's default body.
+- **Render (live):** [fourierle.onrender.com](https://fourierle.onrender.com) builds `main` after GitHub checks pass with `npm ci && npm run build` and publishes `dist`. Its response headers are configured in the Render Dashboard; `public/_headers` does not configure Render. Missing paths serve the branded `404.html` with a real 404 status.
 - **Vercel:** import this GitHub repository; use `npm run build`, output `dist`. `vercel.json` supplies the settings and baseline response headers.
 - **Cloudflare Pages:** connect the repository, Node 24, build `npm run build`, output `dist`. `public/_headers` is copied into the build. Avoid stale caching of `/data`; JS/CSS/font assets are hashed.
 - **Sites:** `.openai/hosting.json` binds the private hosted preview and declares `dist` as static output. Sites source sync is separate from this repository's GitHub `origin`.
