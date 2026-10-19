@@ -1,0 +1,56 @@
+{
+  "USA": {
+    "bounds": [
+      -126,
+      24,
+      -66,
+      50
+    ],
+    "note": "Contiguous United States; Alaska and Hawaii omitted."
+  },
+  "FRA": {
+    "bounds": [
+      -6,
+      41,
+      10,
+      52
+    ],
+    "note": "Metropolitan France, including Corsica."
+  },
+  "NOR": {
+    "bounds": [
+      3,
+      57,
+      32,
+      72
+    ],
+    "note": "Mainland Norway and coastal islands; Svalbard omitted."
+  },
+  "NZL": {
+    "bounds": [
+      165,
+      -48,
+      180,
+      -33
+    ],
+    "note": "Main islands of New Zealand; remote outlying islands omitted."
+  },
+  "NLD": {
+    "bounds": [
+      3,
+      50,
+      8,
+      54
+    ],
+    "note": "European Netherlands; Caribbean islands omitted."
+  },
+  "PRT": {
+    "bounds": [
+      -10,
+      36,
+      -6,
+      43
+    ],
+    "note": "Continental Portugal; Madeira and the Azores omitted."
+  }
+}

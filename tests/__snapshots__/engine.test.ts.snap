@@ -1,0 +1,11 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`versioned UTC schedule > freezes published schedule examples 1`] = `
+[
+  "TUV",
+  "TZA",
+  "BRN",
+  "ARG",
+  "BLR",
+]
+`;
