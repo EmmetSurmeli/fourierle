@@ -33,6 +33,8 @@ def test_entire_dataset_nested_quality_and_final_fidelity():
         assert all(b<=a+1e-10 for a,b in zip(errors,errors[1:])),r['id']
         assert g['exactFallback'] or (r['levels'][-1]['fidelity']>=.999 and r['levels'][-1]['sourceHausdorff']<=.001)
         assert len(g['stages'])==6 and all(a<b for a,b in zip(g['stages'],g['stages'][1:]))
+        assert 64<=g['stages'][-1]<=1024
+        assert {term[0] for term in g['terms']}==set(range(len(g['chains']))),r['id']
         assert len({(t[0],t[1])for t in g['terms']})==len(g['terms'])
         assert all(t[1]!=0 for t in g['terms'])
         assert all(len(c['exact'])>=4 for c in g['chains'])
@@ -42,7 +44,7 @@ def test_selection_comparison_has_real_metrics():
     assert all(x['comparison']['magnitude8']['rmse']<=x['comparison']['pairedLowFrequency8']['rmse']+1e-9 for x in r)
 
 def test_every_country_asset_matches_pinned_source_and_fourier_coefficients():
-    source_path=ROOT/'source/ne_50m_admin_0_countries.geojson'
+    source_path=ROOT/'source/ne_10m_admin_0_countries.geojson'
     source_bytes=source_path.read_bytes()
     source=json.loads(source_bytes)
     manifest=json.loads((ROOT/'source/manifest.json').read_text())
@@ -61,6 +63,8 @@ def test_every_country_asset_matches_pinned_source_and_fourier_coefficients():
     ids=[country['id'] for country in index]
     assert len(ids)==189 and len(set(ids))==189
     assert ids==pool and set(ids)==assets==set(reports)
+    assert json.loads((ROOT/'public/data/MLT.json').read_text())['stages'][-1]>=256
+    assert sum(len(c['exact']) for c in json.loads((ROOT/'public/data/MLT.json').read_text())['chains'])>=50
     expected_continents={'Africa','Asia','Europe','North America','South America','Oceania'}
     for country in index:
         id=country['id']

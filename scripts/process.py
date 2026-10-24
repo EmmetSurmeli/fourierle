@@ -6,6 +6,8 @@ from shapely.geometry import Polygon, LineString, shape, mapping
 from shapely.ops import unary_union
 ROOT = Path(__file__).resolve().parents[1]
 N = 512
+DISPLAY_TOLERANCE = .00075  # Below one quarter of a pixel in the 340px puzzle canvas.
+FINAL_HAUSDORFF = .001  # Sampled Fourier outline must be within about one third of a pixel.
 
 def resample(points, n=N):
     p = np.asarray(points, dtype=float)
@@ -41,10 +43,13 @@ def prepare(feature, override):
     kept=[]; area=0
     for r in rings:
         kept.append(r); area+=abs(Polygon(r).area)
-        if area/total>=.995 or len(kept)>=80: break
+        if area/total>=.995 or len(kept)>=160: break
     points=np.concatenate(kept); lo=points.min(axis=0); hi=points.max(axis=0)
     center=(lo+hi)/2; scale=max(hi-lo)
-    return [(r-center)/scale for r in kept],area/total
+    normalized=[(r-center)/scale for r in kept]
+    # Keep the 1:10m detail visible at game size without shipping thousands of subpixel points.
+    simplified=[np.asarray(Polygon(r).simplify(DISPLAY_TOLERANCE,preserve_topology=True).exterior.coords) for r in normalized]
+    return simplified,area/total
 
 def metric(z, approx):
     rmse=float(np.sqrt(np.mean(np.abs(z-approx)**2)))
@@ -55,7 +60,7 @@ def metric(z, approx):
     return {'rmse':rmse,'fidelity':max(0,1-rmse),'hausdorff':distance,'areaError':area,'aspectError':abs(aspect(z)-aspect(approx))/max(aspect(z),1e-9)}
 
 def main():
-    source=ROOT/'source/ne_50m_admin_0_countries.geojson'; features=json.loads(source.read_text())['features']
+    source=ROOT/'source/ne_10m_admin_0_countries.geojson'; features=json.loads(source.read_text())['features']
     overrides=json.loads((ROOT/'scripts/overrides.json').read_text())
     # Use a sovereign-country game pool; merge separately mapped disputed units.
     for target,part in [('CYP','CYN'),('SOM','SOL')]:
@@ -63,7 +68,7 @@ def main():
         extra_feature=next(f for f in features if f['properties']['ADM0_A3']==part)
         base['geometry']=mapping(unary_union([shape(base['geometry']),shape(extra_feature['geometry'])]))
     extra={'USA','GBR','NZL','NLD','KAZ','ISR','PSX','FRA','FIN','DNK','CUB','CHN','AUS'}
-    excluded={'VAT','CYN','SOL','KIR','FSM','MHL','PLW','TON','MDV'} # Natural Earth 50m has no useful Vatican boundary.
+    excluded={'VAT','CYN','SOL','KIR','FSM','MHL','PLW','TON','MDV'} # The frozen schedule excludes these countries.
     names={'CHN':'China','CIV':'Côte d’Ivoire','CPV':'Cabo Verde','TLS':'Timor-Leste','USA':'United States','TUR':'Türkiye','CZE':'Czechia','COD':'Democratic Republic of the Congo','COG':'Republic of the Congo','PSX':'Palestine'}
     aliases={'USA':['USA','US','United States of America','America'],'GBR':['UK','Britain','Great Britain'],'TUR':['Turkey'],'CZE':['Czech Republic'],'COD':['DR Congo','DRC','Congo Kinshasa'],'COG':['Congo','Congo Brazzaville'],'CIV':['Ivory Coast'],'SWZ':['Swaziland'],'TLS':['East Timor'],'KOR':['South Korea'],'PRK':['North Korea'],'MMR':['Burma'],'MKD':['Macedonia'],'CPV':['Cape Verde']}
     eligible=sorted(f['properties']['ADM0_A3'] for f in features if (f['properties']['TYPE']=='Sovereign country' or f['properties']['ADM0_A3'] in extra) and f['properties']['ADM0_A3'] not in excluded)
@@ -97,11 +102,20 @@ def main():
         budgets=overrides.get(id,{}).get('stages',[2,4,8,16,32])
         if len(budgets)!=5 or any(not isinstance(b,int) or b<1 or b>128 for b in budgets) or any(a>=b for a,b in zip(budgets,budgets[1:])):
             raise ValueError(f'{id}: stages must be five strictly increasing integer budgets from 1 to 128')
+        # Preserve all early reveals, then give every retained island a rotating chain by round six.
+        first=selected[:budgets[-1]]
+        missing=sorted({j for j in range(len(rings))}-{t[0] for t in first})
+        island_starters=[next(t for t in selected[budgets[-1]:] if t[0]==j) for j in missing]
+        starter_keys={(t[0],t[1]) for t in island_starters}
+        selected=first+island_starters+[t for t in selected[budgets[-1]:] if (t[0],t[1]) not in starter_keys]
         def evaluate(terms):
             ms=[metric(z,reconstruct(chains[j]['center'],[t[1:] for t in terms if t[0]==j])) for j,z in enumerate(zs)]
             return {'rmse':math.sqrt(sum(m['rmse']**2 for m in ms)/len(ms)), 'fidelity':1-max(m['rmse'] for m in ms), 'hausdorff':max(m['hausdorff'] for m in ms),'areaError':max(m['areaError'] for m in ms),'aspectError':max(m['aspectError'] for m in ms)}
-        final=max(64,2**math.ceil(math.log2(budgets[-1]+1)))
-        while final<256 and evaluate(selected[:final])['fidelity']<.999: final*=2
+        final=min(128,len(selected))
+        while final<min(1024,len(selected)):
+            quality=evaluate(selected[:final])
+            if quality['fidelity']>=.999 and quality['hausdorff']<=FINAL_HAUSDORFF: break
+            final=min(final*2,1024,len(selected))
         budgets=budgets+[final]
         levels=[evaluate(selected[:b]) for b in budgets]
         source_distance=max(float(LineString(r).hausdorff_distance(LineString(np.c_[np.r_[a.real,a.real[0]],np.r_[a.imag,a.imag[0]]]))) for j,r in enumerate(rings) for a in [reconstruct(chains[j]['center'],[t[1:] for t in selected[:final] if t[0]==j])])
@@ -126,6 +140,6 @@ def main():
     (out/'countries.json').write_text(json.dumps(index,separators=(',',':')))
     (ROOT/'src/pool.json').write_text(json.dumps([x['id'] for x in index]))
     (out/'calibration.json').write_text(json.dumps(reports,separators=(',',':')))
-    (ROOT/'source/manifest.json').write_text(json.dumps({'source':'Natural Earth','version':'5.1.2','scale':'1:50m','license':'Public domain','sha256':hashlib.sha256(source.read_bytes()).hexdigest(),'countries':len(index),'samplesPerPolygon':N},indent=2))
+    (ROOT/'source/manifest.json').write_text(json.dumps({'source':'Natural Earth','version':'5.1.2','scale':'1:10m','license':'Public domain','sha256':hashlib.sha256(source.read_bytes()).hexdigest(),'countries':len(index),'samplesPerPolygon':N,'displayTolerance':DISPLAY_TOLERANCE,'finalSampledHausdorffTarget':FINAL_HAUSDORFF},indent=2))
     print(f'Generated {len(index)} countries; {sum(r["exactFallback"] for r in reports)} exact final-stage fallbacks; {sum(r["reviewRecommended"] for r in reports)} review flags.')
 if __name__=='__main__': main()

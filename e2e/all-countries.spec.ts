@@ -70,6 +70,10 @@ test('every eligible country has a renderable outline at all six stages', async 
       .join(', '),
   );
   expect(empty, 'Every country and stage must draw at least one pixel').toEqual([]);
+  expect(
+    inkCounts.filter((item) => item.counts[0] < 100 || item.counts[5] < 350),
+    'Every country must remain visible at the first and final stages',
+  ).toEqual([]);
   expect(errors, 'No geometry request or rendering errors').toEqual([]);
 });
 

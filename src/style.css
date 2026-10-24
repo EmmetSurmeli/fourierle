@@ -273,15 +273,13 @@ main {
 .axis {
   position: absolute;
   font: 9px monospace;
+  letter-spacing: 1px;
   color: #6e7d66;
   left: 50%;
   transform: translateX(-50%);
 }
 .axis-top {
   top: 0;
-}
-.axis-bottom {
-  bottom: 35px;
 }
 .corner {
   position: absolute;

@@ -10,4 +10,4 @@ Magnitude selection minimizes total squared Fourier signal error. Low-frequency 
 
 For an actual playtest, recruit participants with varied geography familiarity and record (with consent) country, guess count, abandoned puzzles, mistaken countries, and perceived fairness. Use aggregate medians to revisit stages 2–4. Do not present geometric fidelity or the review flag as a human difficulty rating. Retain natural variation in difficulty.
 
-The exact sixth-stage fallback is conservative. It protects recognizability relative to the retained 1:50m reference, not centimeter-level geography. In the explorer, the dashed reference and green Fourier curve are deliberately separate so the mathematical approximation is never misrepresented.
+The exact sixth-stage fallback is conservative. It protects recognizability relative to the retained 1:10m reference, not centimeter-level geography. In the explorer, the dashed reference and green Fourier curve are deliberately separate so the mathematical approximation is never misrepresented. The main game labels the source outline when this fallback is active.

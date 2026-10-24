@@ -447,8 +447,9 @@ export default function App() {
             </span>
           </div>
           <div className="drawing-area">
-            <div className="axis axis-top">N</div>
-            <div className="axis axis-bottom">S</div>
+            <div className="axis axis-top" aria-label="North is up">
+              ↑ NORTH
+            </div>
             <span className="corner corner-tl" />
             <span className="corner corner-tr" />
             <span className="corner corner-bl" />
@@ -488,8 +489,8 @@ export default function App() {
                   : '—'}
               </strong>{' '}
               rotating circles{' '}
-              {geometry && drawingStage === 5 && geometry.exactFallback && !done && (
-                <small>· exact outline</small>
+              {geometry && (done || drawingStage === 5) && geometry.exactFallback && (
+                <small>· exact source outline</small>
               )}
             </div>
           </div>

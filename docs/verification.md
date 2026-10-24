@@ -1,30 +1,20 @@
-# Release verification
+# Country drawing audit
 
-Verified October 18, 2026 (America/New_York; October 19 UTC).
+Updated October 23, 2026 (America/New_York).
 
-- 189 eligible countries generated from pinned Natural Earth 5.1.2 data.
-- 5 Python mathematical/full-dataset tests passed.
-- 13 Vitest engine/React tests passed.
-- 21 Playwright tests passed **against the production build**: seven flows on desktop Chromium, mobile Chromium and mobile WebKit.
-- TypeScript check and Vite production build passed.
-- Schedule validated across 36,525 days. The fixed 189-day permutation cycle guarantees the no-repeat rule indefinitely.
-- Dependency installation audit: zero known vulnerabilities.
-- Visual inspection covered desktop, 375px mobile and 20 diverse countries at all six reconstruction stages. Browser checks additionally cover 320px and 768px widths.
-- Sixth-stage exact reference fallback is used for all countries under the strict source-boundary threshold. Explorer curves remain genuine Fourier partial sums.
+The playable pool remains the frozen set of 189 country IDs. All generated outlines now use the pinned Natural Earth 5.1.2 **1:10m** country source. Its SHA-256 is recorded in `source/manifest.json`; the earlier 1:50m source remains in `source/` for comparison. Malta's retained outline grew from 16 to 55 source vertices. The last round now uses 512 Fourier circles for Malta instead of 64. The small "N" in the puzzle was a north marker; the interface now says "↑ NORTH".
 
-The application and documentation are pushed to GitHub. The separate private Sites publication could not complete: `git.chatgpt-team.site:443` timed out during source synchronization. No hosted deployment URL has been verified. The static build is ready for Vercel or Cloudflare Pages using the README instructions.
+![Malta's final outline before and after the source upgrade](images/malta-before-after.png)
 
-The GitHub Actions workflow is committed, but its remote run status was not independently verified from this environment. Local production-browser tests passed. Human difficulty studies and physical low-end mobile frame-rate testing remain future validation work.
+The generated polygons are simplified below display-pixel scale, retain at least 99.5% of the chosen focus region's exterior area, and keep independent Fourier chains for islands. The final round allocates at least one rotating term to every retained chain and chooses 128–1,024 total circles according to sampled RMS and boundary-distance targets (up to 511 if a single chain contains all available terms). Where the Fourier curve still differs from the source outline beyond the strict threshold, the game labels its exact source-outline display. This distinction matters: a visible source outline is not a claim that the rotating circles reproduce every coastline vertex exactly.
 
-## Exhaustive country audit
+Focused regions keep distant islands from shrinking the puzzle: mainland Ecuador, the main island of Mauritius, the central Seychelles, and Funafuti atoll for Tuvalu. Their omitted areas are named in `scripts/overrides.json` and in each generated geometry's `note`. The game continues to use the existing focus regions for the United States, France, Norway, New Zealand, the Netherlands, and Portugal. Tuvalu's old final outline occupied only 79 painted pixels in the calibration preview; the focused version occupies 945.
 
-Follow-up verification on October 18, 2026 covered all 189 eligible countries:
+The repeatable audit checks:
 
-- The pinned Natural Earth file matches its recorded SHA-256. Every eligible ID has exactly one index entry, one geometry asset, and one calibration report.
-- Every serialized exterior ring matches the processed source to within 0.00000051 normalized units. Every serialized Fourier coefficient matches a fresh DFT to within 0.000000005 per component.
-- All polygons are nonempty, valid, and inside the drawing bounds. The minimum retained exterior area is **99.505%** of the chosen source region. Canada, Greece, Indonesia and the Philippines gained additional independent island chains to meet this threshold.
-- The six reported stage errors were recomputed from the serialized assets and agree within 0.000001. All 189 sixth-stage displays use the exact source outline under the strict fallback rule; the earlier stages remain genuine Fourier partial sums.
-- A browser drew every country at each of the six stages: **1,134 visible canvases**, with no blank stages or geometry request errors. The smallest first-stage drawing, Vanuatu, covered 141 painted pixels in the calibration preview.
-- The production build returned valid geometry payloads for all 189 countries.
+- Each of the 189 IDs has exactly one country index entry, geometry asset, and calibration report. The index order and daily schedule remain unchanged.
+- Every stored exterior ring and Fourier coefficient matches a fresh calculation from the pinned source within serialization tolerance. Every retained chain has a final-round Fourier term.
+- Browser rendering draws every country at all six stages: 1,134 nonblank canvases, with no asset request errors. The smallest first-stage drawing exceeds 100 painted pixels; the smallest final-stage drawing exceeds 350 in the 1280px calibration view.
+- The production build and desktop/mobile gameplay checks validate loading, guessing, assistance, and rendering. The full audit runs on each GitHub push before Render deploys.
 
-The mathematical suite now has six passing tests. The exhaustive browser checks and production asset check are repeatable with `npm run test:all-countries` and are included in GitHub Actions. These tests establish consistency with the pinned 1:50m Natural Earth reference; they cannot establish player recognizability or settle disputed borders.
+Manual contact-sheet review covered every final source outline, with closer review of Malta, Tuvalu, Seychelles, Mauritius, Ecuador, Canada, Chile, and other island-heavy countries. Geometry checks establish drawing consistency with this cartographic source; they do not measure how easily people recognize each country. Natural Earth still generalizes very small countries such as Monaco, Nauru, and San Marino even at 1:10m, and the game does not present these boundaries as authoritative political maps.

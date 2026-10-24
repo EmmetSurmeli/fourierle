@@ -30,6 +30,7 @@ test('first guess win, explorer, share text, refresh and statistics', async ({ p
   ).not.toContainText(name);
 });
 test('six wrong guesses, progressive circles, invalid and duplicate inputs', async ({ page }) => {
+  await expect(page.getByLabel('North is up')).toContainText('NORTH');
   await page.getByRole('combobox').fill('Atlantis');
   await page.getByRole('button', { name: 'Guess', exact: true }).click();
   await expect(page.getByRole('status')).toContainText('Choose a country');

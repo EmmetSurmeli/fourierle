@@ -52,5 +52,21 @@
       43
     ],
     "note": "Continental Portugal; Madeira and the Azores omitted."
+  },
+  "ECU": {
+    "bounds": [-82, -6, -74, 3],
+    "note": "Mainland Ecuador; the Galápagos Islands are omitted for a readable outline."
+  },
+  "MUS": {
+    "bounds": [57, -21, 58, -19],
+    "note": "Main island of Mauritius; Rodrigues and other outlying islands are omitted."
+  },
+  "SYC": {
+    "bounds": [55, -5, 56, -4],
+    "note": "Main Seychelles islands around Mahé and Praslin; distant outer islands are omitted."
+  },
+  "TUV": {
+    "bounds": [179, -8.7, 179.4, -8.3],
+    "note": "Funafuti atoll, Tuvalu's capital island group; the other distant atolls are omitted for a readable outline."
   }
 }
